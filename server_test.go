@@ -2,12 +2,14 @@ package nano
 
 import (
 	"bytes"
+	"context"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"sort"
 	"testing"
+	"time"
 )
 
 func TestServer_ServeHTTP(t *testing.T) {
@@ -104,4 +106,26 @@ func TestServer_Add(t *testing.T) {
 			t.Error(i, "=>", name, " instead of ", rep[i])
 		}
 	}
+}
+
+func ListenAndServe(ctx context.Context, binding string, handler http.Handler) error {
+	done := make(chan struct{})
+	srv := &http.Server{
+		Addr:    binding,
+		Handler: handler,
+	}
+
+	defer close(done)
+
+	go func() {
+		select {
+		case <-ctx.Done():
+		case <-done:
+		}
+		child, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancel()
+		_ = srv.Shutdown(child)
+	}()
+
+	return srv.ListenAndServe()
 }
