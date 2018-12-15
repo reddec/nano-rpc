@@ -1,6 +1,7 @@
 package nano
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"go/ast"
@@ -10,6 +11,7 @@ import (
 	"reflect"
 	"strconv"
 	"sync"
+	"time"
 )
 
 type Server struct {
@@ -153,4 +155,26 @@ func isMethodApplicable(m reflect.Type) bool {
 		return false
 	}
 	return true
+}
+
+func ListenAndServe(ctx context.Context, binding string, handler http.Handler) error {
+	done := make(chan struct{})
+	srv := &http.Server{
+		Addr:    binding,
+		Handler: handler,
+	}
+
+	defer close(done)
+
+	go func() {
+		select {
+		case <-ctx.Done():
+		case <-done:
+		}
+		child, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancel()
+		_ = srv.Shutdown(child)
+	}()
+
+	return srv.ListenAndServe()
 }
