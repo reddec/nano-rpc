@@ -185,8 +185,22 @@ func AddFunc(name string, fn interface{}) error {
 	return defaultServer.AddFunc(name, fn)
 }
 
+func MustAddFunc(name string, fn interface{}) {
+	err := AddFunc(name, fn)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func AddObject(st interface{}) error {
 	return defaultServer.Add(st)
+}
+
+func MustAddObject(st interface{}) {
+	err := AddObject(st)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func Run(ctx context.Context, binding string) error {
