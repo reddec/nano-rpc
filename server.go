@@ -178,3 +178,17 @@ func ListenAndServe(ctx context.Context, binding string, handler http.Handler) e
 
 	return srv.ListenAndServe()
 }
+
+var defaultServer = &Server{}
+
+func AddFunc(name string, fn interface{}) error {
+	return defaultServer.AddFunc(name, fn)
+}
+
+func AddObject(st interface{}) error {
+	return defaultServer.Add(st)
+}
+
+func Run(ctx context.Context, binding string) error {
+	return ListenAndServe(ctx, binding, defaultServer)
+}
